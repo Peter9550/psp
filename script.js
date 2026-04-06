@@ -18,7 +18,7 @@ function onButtonDiggitClick(digit) {
         currentValue = '0.';
     }
     else {
-        if (currentValue.length >= 12) return;
+        if (currentValue.length >= 11) return;
 
         if ((digit !== '.') || (digit === '.' && !currentValue.includes(digit))) {
             currentValue += digit;
@@ -93,7 +93,7 @@ document.getElementById('btn_equals').onclick = function() {
 
     let resultString = result.toString();
 
-    if (result.toString().length > 11) {
+    if (result.toString().length > 12) {
         resultString = result.toExponential(5);
     }
     a = resultString;
