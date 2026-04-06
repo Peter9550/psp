@@ -6,18 +6,34 @@ let result = ''
 const outputElement = document.getElementById('result')
 
 function onButtonDiggitClick(digit) {
-    if(!selectedOperator){
-        if ((digit !== '.') || (digit === '.' && !a.includes(digit))) {
-            a += digit
+    let currentValue = (!selectedOperator) ? a : b;
+
+    if (currentValue === '0' && digit === '0') return;
+
+    if (currentValue === '0' && digit !== '.') {
+        currentValue = digit;
+    }
+
+    if (currentValue === '0' && digit === '.') {
+        currentValue = '0.';
+    }
+    else {
+        if (currentValue.length >= 11) return;
+
+        if ((digit !== '.') || (digit === '.' && !currentValue.includes(digit))) {
+            currentValue += digit;
         }
+    }
+
+    if (!selectedOperator) {
+        a = currentValue;
         outputElement.innerHTML = a;
     }
     else {
-        if ((digit !== '.') || (digit === '.' && !b.includes(digit))) {
-            b += digit
-        }
+        b = currentValue;
         outputElement.innerHTML = b;
     }
+
 }
 
 const digitsId = ['btn_1', 'btn_2', 'btn_3', 'btn_4', 'btn_5', 'btn_6', 'btn_7', 'btn_8', 'btn_9', 'btn_0', 'btn_decimal'];
@@ -75,8 +91,14 @@ document.getElementById('btn_equals').onclick = function() {
             break;
     }
 
-    a = result.toString();
+    let resultString = result.toString();
+
+    if (result.toString().length > 11) {
+        resultString = result.toExponential(5);
+    }
+    a = resultString;
     b = '';
     selectedOperator = null;
+    
     outputElement.innerHTML = a;
 };
