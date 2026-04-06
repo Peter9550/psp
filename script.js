@@ -18,7 +18,7 @@ function onButtonDiggitClick(digit) {
         currentValue = '0.';
     }
     else {
-        if (currentValue.length >= 11) return;
+        if (currentValue.length >= 12) return;
 
         if ((digit !== '.') || (digit === '.' && !currentValue.includes(digit))) {
             currentValue += digit;
@@ -99,6 +99,6 @@ document.getElementById('btn_equals').onclick = function() {
     a = resultString;
     b = '';
     selectedOperator = null;
-    
+
     outputElement.innerHTML = a;
 };
