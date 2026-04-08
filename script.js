@@ -102,3 +102,37 @@ document.getElementById('btn_equals').onclick = function() {
 
     outputElement.innerHTML = a;
 };
+
+document.getElementById('btn_toggle_sign').onclick = function() {
+    if (!selectedOperator) {
+        if (a === '') return;
+
+        if (a.includes('-')) {
+            a = a.replace('-', '');
+        } else {
+            a = '-' + a;
+        }
+        outputElement.innerHTML = a;
+    } else {
+        if (b === '') return;
+
+        if (b.includes('-')) {
+            b = b.replace('-', '');
+        } else {
+            b = '-' + b;
+        }
+        outputElement.innerHTML = b;
+    }
+};
+
+document.getElementById('btn_percentage').onclick = function() {
+    if (!selectedOperator) {
+        if (a === '') return;
+        a = (Number(a) / 100).toString();
+        outputElement.innerHTML = a;
+    } else {
+        if (b === '') return;
+        b = (Number(b) / 100).toString();
+        outputElement.innerHTML = b;
+    }
+};
