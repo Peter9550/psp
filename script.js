@@ -105,7 +105,7 @@ document.getElementById('btn_equals').onclick = function() {
 
 document.getElementById('btn_toggle_sign').onclick = function() {
     if (!selectedOperator) {
-        if (a === '') return;
+        if (a === '' || a === '0') return;
 
         if (a.includes('-')) {
             a = a.replace('-', '');
