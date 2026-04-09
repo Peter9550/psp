@@ -1,9 +1,9 @@
-let a = ''
-let b = ''
-let selectedOperator = null
-let result = ''
+let a = '';
+let b = '';
+let selectedOperator = null;
+let result = '';
 
-const outputElement = document.getElementById('result')
+const outputElement = document.getElementById('result');
 
 function onButtonDiggitClick(digit) {
     let currentValue = (!selectedOperator) ? a : b;
@@ -12,12 +12,9 @@ function onButtonDiggitClick(digit) {
 
     if (currentValue === '0' && digit !== '.') {
         currentValue = digit;
-    }
-
-    if (currentValue === '0' && digit === '.') {
+    } else if (currentValue === '' && digit === '.') {
         currentValue = '0.';
-    }
-    else {
+    } else {
         if (currentValue.length >= 11) return;
 
         if ((digit !== '.') || (digit === '.' && !currentValue.includes(digit))) {
@@ -28,15 +25,14 @@ function onButtonDiggitClick(digit) {
     if (!selectedOperator) {
         a = currentValue;
         outputElement.innerHTML = a;
-    }
-    else {
+    } else {
         b = currentValue;
         outputElement.innerHTML = b;
     }
-
 }
 
 const digitsId = ['btn_1', 'btn_2', 'btn_3', 'btn_4', 'btn_5', 'btn_6', 'btn_7', 'btn_8', 'btn_9', 'btn_0', 'btn_decimal'];
+
 digitsId.forEach(function(id) {
     const button = document.getElementById(id);
     button.onclick = function() {
@@ -46,22 +42,34 @@ digitsId.forEach(function(id) {
 });
 
 document.getElementById('btn_add').onclick = function() {
-    if (a==='') return;
+    if (a === '' || a === '-') return;
     selectedOperator = '+';
 };
 
 document.getElementById('btn_minus').onclick = function() {
-    if (a==='') return;
+    if (!selectedOperator && a === '') {
+        a = '-';
+        outputElement.innerHTML = a;
+        return;
+    }
+
+    if (selectedOperator && b === '') {
+        b = '-';
+        outputElement.innerHTML = b;
+        return;
+    }
+
+    if (a === '' || a === '-') return;
     selectedOperator = '-';
 };
 
 document.getElementById('btn_multiply').onclick = function() {
-    if (a==='') return;
+    if (a === '' || a === '-') return;
     selectedOperator = 'x';
 };
 
 document.getElementById('btn_divide').onclick = function() {
-    if (a==='') return;
+    if (a === '' || a === '-') return;
     selectedOperator = '/';
 };
 
@@ -74,7 +82,7 @@ document.getElementById('btn_on_clear').onclick = function() {
 };
 
 document.getElementById('btn_equals').onclick = function() {
-    if (a=== '' || b === '' || !selectedOperator) return;
+    if (a === '' || a === '-' || b === '' || b === '-' || !selectedOperator) return;
 
     switch (selectedOperator) {
         case '+':
@@ -93,9 +101,10 @@ document.getElementById('btn_equals').onclick = function() {
 
     let resultString = result.toString();
 
-    if (result.toString().length > 12) {
+    if (resultString.length > 12) {
         resultString = result.toExponential(5);
     }
+
     a = resultString;
     b = '';
     selectedOperator = null;
@@ -127,11 +136,11 @@ document.getElementById('btn_toggle_sign').onclick = function() {
 
 document.getElementById('btn_percentage').onclick = function() {
     if (!selectedOperator) {
-        if (a === '') return;
+        if (a === '' || a === '-') return;
         a = (Number(a) / 100).toString();
         outputElement.innerHTML = a;
     } else {
-        if (b === '') return;
+        if (b === '' || b === '-') return;
         b = (Number(b) / 100).toString();
         outputElement.innerHTML = b;
     }
