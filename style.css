@@ -1,6 +1,8 @@
-
 body {
-    background: radial-gradient(circle at center, #001f3f 0%, #000a14 100%);
+    background-image: url(https://img.freepik.com/premium-photo/hd-abstract-background-wallpaper-design_851755-7313.jpg?semt=ais_hybrid&w=740);
+    background-size: cover;
+    background-position: center;
+    background-color: #1a1a1a;
     color: white;
     font-family: 'Segoe UI', sans-serif;
     display: flex;
@@ -11,29 +13,23 @@ body {
 }
 
 .calc-container {
-    background: #002244;
-    border: 2px solid #003366;
+    background: #2a2a2a;
+    border: 2px solid #444;
     padding: 20px;
     border-radius: 15px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 51, 102, 0.5);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
 }
 
 .result {
     width: 260px;
-    background:
-        url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bauman_Moscow_State_Technical_University_logo.svg/400px-Bauman_Moscow_State_Technical_University_logo.svg.png') no-repeat center,
-        #000510;
-    background-size: 80px;
-    background-blend-mode: screen;
-    color: #e6f2ff;
-    text-shadow: 0 0 10px rgba(230, 242, 255, 0.4);
+    background: #000;
+    color: #00ff88;
     text-align: right;
     font-size: 2.5rem;
     padding: 10px 20px;
     margin-bottom: 20px;
     border-radius: 10px;
     font-weight: 200;
-    border: 1px solid #003366;
 }
 
 .buttons-grid {
@@ -47,38 +43,34 @@ body {
     width: 60px;
     height: 60px;
     border: none;
-    background: #003366;
-    color: #b3d9ff;
+    background: #404040;
+    color: white;
     font-size: 1.2rem;
     font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
-    border: 1px solid #004080;
 }
 
 .my-btn:hover {
-    background-color: #004488;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    border: 1px solid #ffd700;
-    color: #ffd700;
+    background-color: #333;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    cursor: pointer;
     transform: scale(1.05);
 }
 
-.primary { background: #0055a4; color: white; border-color: #0066cc; }
-.secondary { background: #334d66; color: white; border-color: #446688; }
+.primary { background: #007bff; }
+.secondary { background: #888; color: black; }
 
 .execute {
     grid-column: span 2;
     width: 100%;
-    background: #b38600;
-    color: white;
-    border-color: #cca300;
 }
-
-.execute:hover {
-    background: #cca300;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-    color: white;
+.extra-tools, .footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 .top-menu {
@@ -90,12 +82,12 @@ body {
     display: flex;
     justify-content: center;
     gap: 30px;
-    background: rgba(0, 10, 20, 0.8);
-    border-bottom: 1px solid #003366;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 .top-menu a {
-    color: #88aacc;
+    color: white;
     text-decoration: none;
     font-size: 1.2rem;
     font-weight: bold;
@@ -103,27 +95,27 @@ body {
 }
 
 .top-menu a:hover {
-    color: #ffd700;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: #00ff88;
+    text-shadow: 0 0 10px #00ff88;
 }
 
 .top-menu a.active {
-    color: #ffd700;
-    border-bottom: 2px solid #ffd700;
+    color: #00ff88;
+    border-bottom: 2px solid #00ff88;
 }
 
 .about-container {
-    background: #002244;
-    border: 2px solid #0055a4;
+    background: #2a2a2a;
+    border: 2px solid #00ff88;
     padding: 40px;
     border-radius: 15px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-    color: #e6f2ff;
+    color: white;
     max-width: 400px;
 }
 
 .about-container h2 {
     margin-top: 0;
-    color: #ffd700;
+    color: #00ff88;
 }
