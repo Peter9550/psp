@@ -1,4 +1,3 @@
-import {ProductComponent} from "../../components/product/index.js";
 import {BackButtonComponent} from "../../components/back-button/index.js";
 import {MainPage} from "../main/index.js";
 
@@ -7,31 +6,41 @@ export class ProductPage {
         this.parent = parent;
         this.id = id;
     }
-
-    getData() {
-        // Здесь в идеале искать по массиву, но для ЛР можно просто имитировать
-        return {
-            id: this.id,
-            src: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=500",
-            title: `Продукт №${this.id}`,
-            text: "Подробное описание продукта. Срок годности в норме, ГОСТ соблюден.",
-            price: "Уточняйте на кассе"
+    // В реальности данные ищутся по ID, здесь имитируем поиск
+    getProductData(id) {
+        const data = {
+            1: { title: "Сникерс", price: "65 ₽", src: "https://ir.ozone.ru/s3/multimedia-k/6063354584.jpg", cal: "280", p: "4g", f: "14g", c: "33g", exp: "12 месяцев" },
+            2: { title: "Марс", price: "60 ₽", src: "https://main-cdn.sbermegamarket.ru/big2/hlr-system/-25/151/444/811/201/541/100074853804b0.png", cal: "230", p: "3g", f: "11g", c: "29g", exp: "12 месяцев" },
+            3: { title: "Липтон", price: "85 ₽", src: "https://basket-29.wbbasket.ru/vol5552/part555289/555289822/images/c516x688/1.webp", cal: "80", p: "0g", f: "0g", c: "20g", exp: "6 месяцев" },
+            4: { title: "Сырная булочка", price: "45 ₽", src: "https://www.cobsbread.com/cdn/shop/files/CAPROD000012_000_001_73569f71-6dfd-4cbe-87fd-beeb75996844.webp?v=1762887158&width=1920", cal: "210", p: "6g", f: "8g", c: "25g", exp: "24 часа" }
         };
+        return data[id] || data[1];
     }
-
-    clickBack() {
-        new MainPage(this.parent).render();
-    }
-
     render() {
-        this.parent.innerHTML = '';
-        this.parent.insertAdjacentHTML('beforeend', '<div id="product-page" class="container mt-5"></div>');
+        const item = this.getProductData(this.id);
+        this.parent.innerHTML = `<div class="container py-5" id="product-container"></div>`;
+        const root = document.getElementById('product-container');
 
-        const root = document.getElementById('product-page');
+        new BackButtonComponent(root).render(() => new MainPage(this.parent).render());
 
-        new BackButtonComponent(root).render(this.clickBack.bind(this));
-
-        const data = this.getData();
-        new ProductComponent(root).render(data);
+        root.insertAdjacentHTML('beforeend', `
+            <div class="row g-5">
+                <div class="col-md-6"><img src="${item.src}" class="img-fluid rounded-4 shadow-sm"></div>
+                <div class="col-md-6">
+                    <h1 class="fw-bold mb-4" style="color: #004077;">${item.title}</h1>
+                    <div class="p-4 bg-white rounded-4 shadow-sm">
+                        <h5 class="fw-bold mb-3">Состав продукта</h5>
+                        <table class="table table-borderless m-0">
+                            <tr><td class="ps-0 text-muted">Калории</td><td class="text-end fw-bold">${item.cal} ккал</td></tr>
+                            <tr><td class="ps-0 text-muted">Белки</td><td class="text-end fw-bold">${item.p}</td></tr>
+                            <tr><td class="ps-0 text-muted">Жиры</td><td class="text-end fw-bold">${item.f}</td></tr>
+                            <tr><td class="ps-0 text-muted">Углеводы</td><td class="text-end fw-bold">${item.c}</td></tr>
+                            <tr class="border-top"><td class="ps-0 text-muted pt-3">Срок годности</td><td class="text-end fw-bold pt-3">${item.exp}</td></tr>
+                        </table>
+                        <h3 class="mt-4 fw-bold" style="color: #004077;">${item.price}</h3>
+                    </div>
+                </div>
+            </div>
+        `);
     }
 }

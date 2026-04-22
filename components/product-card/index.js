@@ -4,37 +4,26 @@ export class ProductCardComponent {
     constructor(parent) {
         this.parent = parent;
     }
-
     getHTML(data) {
         return `
-            <div class="card shadow-sm" style="width: 18rem; margin: 15px; border-radius: 10px; overflow: hidden;">
-                <img class="card-img-top" src="${data.src}" alt="${data.title}" style="height: 200px; object-fit: cover;">
+            <div class="card product-card shadow-sm m-3" id="card-${data.id}" style="width: 17rem;">
+                <img src="${data.src}" class="card-img-top" style="height: 180px;">
                 <div class="card-body" id="card-body-${data.id}">
-                    <h5 class="card-title">${data.title}</h5>
-                    <p class="card-text text-muted" style="font-size: 0.9rem;">${data.text}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <button class="btn btn-outline-primary btn-sm" id="click-card-${data.id}" data-id="${data.id}">Просмотр</button>
+                    <h6 class="text-muted small mb-1">${data.category}</h6>
+                    <h5 class="card-title mb-3" style="color: #004077; font-weight: 700;">${data.title}</h5>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <span class="fw-bold" style="font-size: 1.2rem;">${data.price}</span>
+                        <i class="bi bi-plus-circle-fill" style="color: #004077; font-size: 1.5rem;"></i>
                     </div>
                 </div>
             </div>
         `;
     }
-
     addListeners(data, listener) {
-        document.getElementById(`click-card-${data.id}`).addEventListener("click", listener);
+        document.getElementById(`card-${data.id}`).addEventListener("click", listener);
     }
-
     render(data, listener) {
-        const html = this.getHTML(data);
-        this.parent.insertAdjacentHTML('beforeend', html);
-
-        const cardBody = document.getElementById(`card-body-${data.id}`);
-        const badgeContainer = new BadgeComponent(cardBody);
-
-        // Рисуем два значка: категорию и цену
-        badgeContainer.render(data.category, 'primary');
-        badgeContainer.render(data.price, 'secondary');
-
+        this.parent.insertAdjacentHTML('beforeend', this.getHTML(data));
         this.addListeners(data, listener);
     }
 }

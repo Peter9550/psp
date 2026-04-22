@@ -2,24 +2,15 @@ export class BackButtonComponent {
     constructor(parent) {
         this.parent = parent;
     }
-
     addListeners(listener) {
-        document
-            .getElementById("back-button")
-            .addEventListener("click", listener)
+        document.getElementById("back-btn").addEventListener("click", listener);
     }
-
-    getHTML() {
-        return (
-            `
-                <button id="back-button" class="btn btn-primary" type="button">Назад</button>
-            `
-        )
-    }
-
     render(listener) {
-        const html = this.getHTML()
-        this.parent.insertAdjacentHTML('beforeend', html)
-        this.addListeners(listener)
+        this.parent.insertAdjacentHTML('beforeend', `
+            <button id="back-btn" class="btn btn-link text-decoration-none p-0 mb-4" style="color: #004077;">
+                <i class="bi bi-chevron-left"></i> Назад
+            </button>
+        `);
+        this.addListeners(listener);
     }
 }
