@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BMSTU Market - Вариант 3</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <style>
+        /* Фирменные цвета Бауманки */
+        :root {
+            --bmstu-blue: #004077;
+            --bmstu-light-blue: #0056a0;
+        }
+        .btn-primary, .bg-primary {
+            background-color: var(--bmstu-blue) !important;
+            border-color: var(--bmstu-blue) !important;
+        }
+        .btn-outline-primary {
+            color: var(--bmstu-blue) !important;
+            border-color: var(--bmstu-blue) !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--bmstu-blue) !important;
+            color: white !important;
+        }
+        .card-title { color: var(--bmstu-blue); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="main.js" type="module"></script>
+</body>
+</html>
