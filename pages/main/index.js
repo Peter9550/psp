@@ -1,4 +1,3 @@
-import {ProductCardComponent} from "../../components/product-card/index.js";
 import {CarouselComponent} from "../../components/carousel/index.js";
 import {ProductPage} from "../product/index.js";
 
@@ -9,38 +8,31 @@ export class MainPage {
 
     getData() {
         return [
-            { id: 1, title: "Сникерс", price: "65 ₽", category: "Шоколад", src: "https://images.unsplash.com/photo-1627311139418-4981fcae9581?w=600", text: "Классический арахисовый батончик." },
-            { id: 2, title: "Марс", price: "60 ₽", category: "Шоколад", src: "https://images.unsplash.com/photo-1510103289066-51d08e9a2656?w=600", text: "Мягкая нуга и густая карамель." },
-            { id: 3, title: "Липтон Лимон", price: "85 ₽", category: "Напитки", src: "https://images.unsplash.com/photo-1634638777176-591a27e3668b?w=600", text: "Освежающий зеленый чай." },
-            { id: 4, title: "Булка с сыром", price: "45 ₽", category: "Выпечка", src: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600", text: "Свежая бауманская выпечка." }
+            { id: 1, title: "Сникерс", price: "65 ₽", src: "https://main-cdn.sbermegamarket.ru/big1/hlr-system/-20/619/310/204/418/45/100059257403b0.jpg" },
+            { id: 2, title: "Марс", price: "60 ₽", src: "https://main-cdn.sbermegamarket.ru/big2/hlr-system/-25/151/444/811/201/541/100074853804b0.png" },
+            { id: 3, title: "Липтон Лимон", price: "85 ₽", src: "https://basket-29.wbbasket.ru/vol5552/part555289/555289822/images/c516x688/1.webp" },
+            { id: 4, title: "Булка с сыром", price: "45 ₽", src: "https://www.cobsbread.com/cdn/shop/files/CAPROD000012_000_001_73569f71-6dfd-4cbe-87fd-beeb75996844.webp?v=1762887158&width=1920" }
         ];
     }
 
     render() {
         this.parent.innerHTML = `
-            <div class="container py-5">
-                <div class="row align-items-center mb-5 bg-white p-4 shadow-sm rounded-4">
-                    <div class="col-md-4 text-center text-md-start mb-4 mb-md-0">
-                        <img src="https://brandslogo.net/wp-content/uploads/2021/11/bmstu-logo.png" class="logo-img mb-3">
-                        <h1 class="display-6 mb-0">БУФЕТ<br>МГТУ</h1>
+            <div class="container-fluid vh-100 d-flex align-items-center">
+                <div class="container">
+                    <div class="row align-items-center g-5">
+                        <div class="col-lg-5 logo-box text-center text-lg-start">
+                            <img src="https://brandslogo.net/wp-content/uploads/2021/11/bmstu-logo.png" alt="МГТУ">
+                            <h1>БУФЕТ<br>МГТУ им. Баумана</h1>
+                        </div>
+                        <div class="col-lg-7" id="carousel-root"></div>
                     </div>
-                    <div class="col-md-8" id="carousel-container"></div>
                 </div>
-                <div id="main-page" class="d-flex flex-wrap justify-content-center"></div>
             </div>
         `;
 
-        const data = this.getData();
-
-        // Рендерим карусель
-        new CarouselComponent(document.getElementById('carousel-container')).render(data);
-
-        // Рендерим карточки
-        const cardsRoot = document.getElementById('main-page');
-        data.forEach(item => {
-            new ProductCardComponent(cardsRoot).render(item, () => {
-                new ProductPage(this.parent, item.id).render();
-            });
+        const carousel = new CarouselComponent(document.getElementById('carousel-root'));
+        carousel.render(this.getData(), (id) => {
+            new ProductPage(this.parent, id).render();
         });
     }
 }

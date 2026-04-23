@@ -9,7 +9,7 @@ export class ProductPage {
     // В реальности данные ищутся по ID, здесь имитируем поиск
     getProductData(id) {
         const data = {
-            1: { title: "Сникерс", price: "65 ₽", src: " ", cal: "280", p: "4г", f: "14г", c: "33г", exp: "12 месяцев" },
+            1: { title: "Сникерс", price: "65 ₽", src: "https://main-cdn.sbermegamarket.ru/big1/hlr-system/-20/619/310/204/418/45/100059257403b0.jpg", cal: "280", p: "4г", f: "14г", c: "33г", exp: "12 месяцев" },
             2: { title: "Марс", price: "60 ₽", src: "https://main-cdn.sbermegamarket.ru/big2/hlr-system/-25/151/444/811/201/541/100074853804b0.png", cal: "230", p: "3г", f: "11г", c: "29г", exp: "12 месяцев" },
             3: { title: "Липтон", price: "85 ₽", src: "https://basket-29.wbbasket.ru/vol5552/part555289/555289822/images/c516x688/1.webp", cal: "80", p: "0г", f: "0г", c: "20г", exp: "6 месяцев" },
             4: { title: "Сырная булочка", price: "45 ₽", src: "https://www.cobsbread.com/cdn/shop/files/CAPROD000012_000_001_73569f71-6dfd-4cbe-87fd-beeb75996844.webp?v=1762887158&width=1920", cal: "210", p: "6г", f: "8г", c: "25г", exp: "24 часа" }
