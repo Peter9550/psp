@@ -2,25 +2,31 @@
   {
     "id": 1,
     "src": "https://i.pinimg.com/originals/c9/ea/65/c9ea654eb3a7398b1f702c758c1c4206.jpg",
-    "title": "Акция 1",
+    "title": "Я поменял только заголовок",
     "text": "Такой акции вы еще не видели 1"
-  },
-  {
-    "id": 2,
-    "src": "https://i.pinimg.com/originals/c9/ea/65/c9ea654eb3a7398b1f702c758c1c4206.jpg",
-    "title": "Акция 2",
-    "text": "Такой акции вы еще не видели 2"
-  },
-  {
-    "id": 3,
-    "src": "https://example.com/img.jpg",
-    "title": "Акция от Thunder Client",
-    "text": "Тестовое описание"
   },
   {
     "id": 4,
     "src": "https://img.com/myphoto.jpg",
-    "title": "Акция из Постмана",
+    "title": "Другой заголовок",
     "text": "Мы подключили API!"
+  },
+  {
+    "id": 6,
+    "src": "https://example.com/img.jpg",
+    "title": "Новая акция",
+    "text": "Успей купить!"
+  },
+  {
+    "id": 7,
+    "src": "https://example.com/img.jpg",
+    "title": "Новая акция",
+    "text": "Скидка 50%"
+  },
+  {
+    "id": 8,
+    "src": "https://example.com/img.jpg",
+    "title": "Новая акция",
+    "text": "Скидка 50%"
   }
 ]

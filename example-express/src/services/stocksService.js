@@ -1,8 +1,6 @@
 const fileService = require('./fileService');
-
 let dataFilePath;
 
-// Инициализация пути (вызовем её в index.js)
 const init = (filePath) => {
     dataFilePath = filePath;
 };
@@ -48,4 +46,5 @@ const remove = (id) => {
     return true;
 };
 
+// Убрали replace отсюда
 module.exports = { init, findAll, findOne, create, update, remove };

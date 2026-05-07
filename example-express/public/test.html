@@ -1,0 +1,10 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  socket.on('stockCreated', (data) => {
+    alert('СЕРВЕР СООБЩИЛ: Создана новая акция: ' + data.title);
+  });
+  socket.on('stockDeleted', (id) => {
+    console.log('Удалена акция с ID:', id);
+  });
+</script>

@@ -1,39 +1,37 @@
 const express = require('express');
+const http = require('http'); // Встроенный модуль Node.js
+const { Server } = require('socket.io'); // Импорт сокетов
 const path = require('path');
 const stocksRouter = require('./routes/stocks');
 const stocksService = require('./services/stocksService');
 
 const app = express();
+const server = http.createServer(app); // Создаем HTTP-сервер на базе Express
+const io = new Server(server); // Привязываем сокеты к серверу
+
 const PORT = 3000;
 
-// 1. Путь к данным и инициализация сервиса
-const DATA_FILE_PATH = path.join(__dirname, 'data/stocks.json');
-stocksService.init(DATA_FILE_PATH);
-
-// 2. Middleware для парсинга JSON (обязательно перед роутами)
-app.use(express.json());
-
-// 3. Логирующий middleware (выводит в консоль каждый запрос)
+// Делаем объект io доступным во всем приложении через req
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    req.io = io;
     next();
 });
 
-// 4. Подключение маршрутов
+app.use(express.json());
+app.use(express.static('public'));
+
+// Логика подключения
+io.on('connection', (socket) => {
+    console.log('Новое устройство подключилось по WebSocket! 🔌');
+
+    socket.on('disconnect', () => {
+        console.log('Пользователь отключился');
+    });
+});
+
 app.use('/stocks', stocksRouter);
 
-// 5. Обработка несуществующих маршрутов (404)
-app.use((req, res) => {
-    res.status(404).json({ error: 'Маршрут не найден' });
-});
-
-// 6. Глобальный обработчик ошибок (500)
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
-});
-
-// 7. Запуск
-app.listen(PORT, () => {
-    console.log(`Сервер запущен по адресу http://localhost:${PORT}`);
+// Важно: теперь запускаем server.listen, а не app.listen
+server.listen(PORT, () => {
+    console.log(`Сервер и WebSockets запущены на порту ${PORT} 🚀`);
 });
