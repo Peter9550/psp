@@ -5,56 +5,180 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Буфет МГТУ им. Н.Э. Баумана</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-        :root { --bmstu-blue: #004077; --bmstu-bg: #f2f5f8; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--bmstu-bg); color: #212529; }
-
-        /* Стили лого и заголовка */
-        .logo-box h1 { color: var(--bmstu-blue); font-weight: 800; font-size: 2.5rem; text-transform: uppercase; }
-
-        /* Контейнер таймера */
-        .progress-container {
-            height: 6px;
-            width: 100%;
-            background-color: rgba(0, 64, 119, 0.1);
-            border-radius: 3px;
-            margin-bottom: 20px;
-            overflow: hidden;
+        :root {
+            --bmstu-blue: #004077;
+            --bmstu-blue-light: #1a5a99;
+            --bmstu-blue-soft: rgba(0, 64, 119, 0.08);
+            --bmstu-bg-1: #f4f7fb;
+            --bmstu-bg-2: #e6eef7;
+            --shadow-sm: 0 2px 8px rgba(0, 64, 119, 0.06);
+            --shadow-md: 0 8px 24px rgba(0, 64, 119, 0.10);
+            --shadow-lg: 0 16px 40px rgba(0, 64, 119, 0.18);
         }
 
-        /* Сама полоска */
-        .progress-bar-fill {
-            height: 100%;
-            background-color: var(--bmstu-blue);
-            width: 0;
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, var(--bmstu-bg-1) 0%, var(--bmstu-bg-2) 100%);
+            min-height: 100vh;
+            color: #212529;
         }
 
-        /* Анимация заполнения на 5 секунд */
-        @keyframes fillProgress {
-            from { width: 0; }
-            to { width: 100%; }
+        .logo-box h1 {
+            color: var(--bmstu-blue);
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            line-height: 1.05;
+            margin: 0;
+        }
+        .mgtu-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 96px; height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bmstu-blue), var(--bmstu-blue-light));
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: 1.5px;
+            box-shadow: 0 10px 24px rgba(0, 64, 119, 0.3);
         }
 
-        /* Класс, который запускает движение */
-        .animating {
-            animation: fillProgress 5s linear forwards;
+        /* поле поиска */
+        .filter-wrapper .input-group { box-shadow: var(--shadow-sm); border-radius: 14px; overflow: hidden; }
+        .filter-wrapper .input-group-text { border: 2px solid #e3e8ef; border-right: none; background: #fff; }
+        .filter-wrapper #filter-input {
+            border: 2px solid #e3e8ef;
+            border-left: none;
+            padding: 0.85rem 1rem;
+            font-size: 1rem;
         }
+        .filter-wrapper #filter-input:focus {
+            border-color: var(--bmstu-blue);
+            box-shadow: none;
+        }
+        .filter-wrapper:focus-within .input-group-text { border-color: var(--bmstu-blue); }
 
-        .carousel-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 64, 119, 0.1);
+        /* карточка товара */
+        .product-card {
+            background: #fff;
             border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform .3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow .3s ease;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+        .product-card .img-box { overflow: hidden; height: 200px; background: var(--bmstu-blue-soft); }
+        .product-card .img-box img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform .45s ease;
+        }
+        .product-card:hover .img-box img { transform: scale(1.06); }
+
+        .product-card .card-title {
+            color: var(--bmstu-blue);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            min-height: 2.6em;
+        }
+        .product-card .price {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #212529;
+        }
+        .product-card .plus-icon {
+            color: var(--bmstu-blue);
+            font-size: 1.6rem;
+            transition: transform .2s ease;
+        }
+        .product-card:hover .plus-icon { transform: rotate(90deg); }
+
+        /* кнопка удаления */
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 36px; height: 36px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            color: #dc3545;
+            font-size: 0.95rem;
+            line-height: 1;
+            z-index: 5;
+            transition: all .2s ease;
+            opacity: 0;
+        }
+        .product-card:hover .delete-btn { opacity: 1; }
+        .delete-btn:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+        @media (hover: none) { .delete-btn { opacity: 1; } }
+
+        /* состояния списка */
+        .state-block {
+            padding: 4rem 1rem;
+            text-align: center;
+            color: #8a93a3;
+        }
+        .state-block i { font-size: 3rem; color: #c0c8d4; display: block; margin-bottom: 1rem; }
+        .state-block.error i { color: #dc3545; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-icon { animation: spin 1s linear infinite; display: inline-block; }
+
+        /* страница карточки */
+        .product-detail-img {
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            max-height: 500px;
+            width: 100%;
+            object-fit: cover;
+            background: var(--bmstu-blue-soft);
+        }
+        .detail-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+        }
+        .detail-card h5 {
+            color: var(--bmstu-blue);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        #back-btn {
+            color: var(--bmstu-blue) !important;
+            font-weight: 600;
+            transition: transform .2s ease;
+        }
+        #back-btn:hover { transform: translateX(-4px); }
+
+        @media (max-width: 768px) {
+            .logo-box h1 { font-size: 1.75rem; }
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
-    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="main.js" type="module"></script>
 </body>
 </html>

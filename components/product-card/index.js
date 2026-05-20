@@ -1,19 +1,34 @@
 export class ProductCardComponent {
     constructor(parent) { this.parent = parent; }
-    render(data, listener) {
+
+    render(data, onClick, onDelete) {
+        const safeTitle = encodeURIComponent(data.title || 'Товар');
+        const fallback = `https://placehold.co/600x400/004077/FFFFFF/png?text=${safeTitle}`;
+
         this.parent.insertAdjacentHTML('beforeend', `
-            <div class="card product-card m-3" id="card-${data.id}" style="width: 17rem; cursor: pointer;">
-                <img src="${data.src}" class="card-img-top" style="height: 180px;">
-                <div class="card-body">
-                    <h6 class="text-muted small mb-1 uppercase">${data.category}</h6>
-                    <h5 class="card-title mb-3" style="color: #004077; font-weight: 700;">${data.title}</h5>
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <span class="fw-bold" style="font-size: 1.2rem;">${data.price}</span>
-                        <i class="bi bi-plus-circle-fill" style="color: #004077; font-size: 1.5rem;"></i>
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
+                <div class="card product-card position-relative h-100" id="card-${data.id}">
+                    <button class="delete-btn" id="delete-${data.id}" title="Удалить">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    <div class="img-box">
+                        <img src="${data.src}" alt="${data.title}"
+                             onerror="this.onerror=null;this.src='${fallback}';">
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">${data.title}</h5>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="price">${data.price}</span>
+                            <i class="bi bi-plus-circle-fill plus-icon"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         `);
-        document.getElementById(`card-${data.id}`).addEventListener("click", listener);
+        document.getElementById(`card-${data.id}`).addEventListener("click", () => onClick(data.id));
+        document.getElementById(`delete-${data.id}`).addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (confirm(`Удалить «${data.title}»?`)) onDelete(data.id);
+        });
     }
 }
