@@ -1,42 +1,42 @@
+// ЛР6: вместо XMLHttpRequest используем fetch + async/await + try/catch
 export class Ajax {
-    static request({ method, url, body }) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open(method, url);
-            xhr.setRequestHeader('Content-Type', 'application/json');
+    static async request({ method, url, body }) {
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined,
+            });
 
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    let data = null;
-                    if (xhr.responseText) {
-                        try { data = JSON.parse(xhr.responseText); }
-                        catch (_) { data = xhr.responseText; }
-                    }
-                    resolve({ status: xhr.status, data });
-                } else {
-                    reject({ status: xhr.status, statusText: xhr.statusText, response: xhr.responseText });
-                }
-            };
+            if (!response.ok) {
+                throw {
+                    status: response.status,
+                    statusText: response.statusText,
+                };
+            }
 
-            xhr.onerror = () => reject(new Error('Сетевая ошибка'));
-
-            xhr.send(body ? JSON.stringify(body) : null);
-        });
+            // 204 No Content (например, после DELETE) тела не имеет
+            const data = response.status === 204 ? null : await response.json();
+            return { status: response.status, data };
+        } catch (e) {
+            // прокидываем ошибку дальше — её ловит вызывающий код (pages/main, pages/product)
+            throw e;
+        }
     }
 
-    static get(url) {
+    static async get(url) {
         return Ajax.request({ method: 'GET', url });
     }
 
-    static post(url, body) {
+    static async post(url, body) {
         return Ajax.request({ method: 'POST', url, body });
     }
 
-    static patch(url, body) {
+    static async patch(url, body) {
         return Ajax.request({ method: 'PATCH', url, body });
     }
 
-    static delete(url) {
+    static async delete(url) {
         return Ajax.request({ method: 'DELETE', url });
     }
 }

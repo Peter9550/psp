@@ -17,7 +17,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use(express.static('public'));
+// ЛР6, часть 2: раздаём собранный фронт как статику
+// path устойчив к CWD: __dirname = .../example-express/src, поднимаемся на уровень и берём public/
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/products', productsRouter);
 
