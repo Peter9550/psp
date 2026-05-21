@@ -1,242 +1,188 @@
-# Лабораторная работа №5 — AJAX-запросы к API
+# ЛР 5. AJAX на XMLHttpRequest
 
-**Дисциплина:** Принципы построения программных систем
-**Группа:** ИУ5-42Б
-**Студент:** Емельянов Пётр
-**Вариант:** 1 (фильтрация карточек по названию + удаление через DELETE)
+**Студент:** Емельянов Пётр, ИУ5-42Б
+**Вариант:** 1 (фильтрация по названию + удаление)
+**Цель:** Заменить захардкоженные данные ЛР3 реальными HTTP-запросами к серверу через XHR.
 
----
+## План
+1. Класс `Ajax` (XHR-обёртка на колбэках)
+2. URL-константы в `modules/stockUrls.js`
+3. Загрузка списка карточек с сервера
+4. Фильтрация по названию (GET `?title=`)
+5. Удаление через DELETE
+6. Доп: 3 режима PATCH для демонстрации асинхронности
 
-## Цель работы
+## 1. Запуск
 
-Овладеть взаимодействием с внешним API через `XMLHttpRequest`: получение
-данных по HTTP, отображение их в интерфейсе, выполнение CRUD-операций.
-По сравнению с предыдущими работами, где данные были захардкожены в JS,
-здесь карточки хранятся на отдельном бэкенд-сервере, а клиент получает
-их асинхронно по сети.
+```bash
+# бэкенд
+cd example-express
+npm install
+npm start
+# → http://localhost:3000
 
----
+# фронтенд: открыть index.html через Live Server в VS Code
+# → http://127.0.0.1:5500
+```
 
-## Архитектура приложения
+## 2. Класс Ajax
 
-Приложение состоит из двух независимых процессов, общающихся по HTTP:
+```js
+Ajax.get('http://localhost:3000/products',
+  (response) => console.log(response.data),
+  (err)      => console.error(err)
+);
+// → XHR GET /products
+// → 2xx: вызывает onSuccess({status, data}) с распарсенным JSON
+// → не-2xx или сетевой сбой: вызывает onError({status, statusText})
+// → DELETE/204: data = null (тела нет, не парсим пустую строку)
+```
 
-| Часть | Расположение | Технология |
-|---|---|---|
-| Клиент (фронт) | корень репозитория | HTML + Bootstrap + ES-модули, `XMLHttpRequest` |
-| Сервер (бэк)   | `example-express/` | Node.js + Express, данные в JSON-файле |
+Файл: [`modules/ajax.js`](modules/ajax.js)
+
+## 3. URL-константы
+
+```js
+import { Urls } from "./modules/stockUrls.js";
+
+Urls.products()              // → http://localhost:3000/products
+Urls.productsByTitle('сни')  // → http://localhost:3000/products?title=%D1%81%D0%BD%D0%B8
+Urls.product(5)              // → http://localhost:3000/products/5
+// → encodeURIComponent для кириллицы в query
+// → BASE_URL вынесен в одну константу — поменять адрес = 1 строка
+```
+
+Файл: [`modules/stockUrls.js`](modules/stockUrls.js)
+
+## 4. Загрузка списка
+
+```js
+Ajax.get(Urls.products(),
+  (response) => self._renderProducts(response.data),
+  (err) => grid.innerHTML = '<div>Сервер недоступен</div>'
+);
+// → Захардкоженные массивы из ЛР3 удалены
+// → Состояние карточек теперь полностью на бэке (products.json)
+```
+
+Файл: [`pages/main/index.js`](pages/main/index.js)
+
+## 5. Фильтрация (на сервере)
+
+```js
+input.addEventListener('input', (e) => {
+  self.filter = e.target.value.trim();
+  clearTimeout(self._debounce);
+  self._debounce = setTimeout(() => self.renderGrid(), 300);
+});
+// → debounce 300мс — не дёргаем сервер на каждую букву
+// → renderGrid собирает Urls.productsByTitle(self.filter)
+// → Сервер фильтрует через .filter(p => p.title.toLowerCase().includes(...))
+```
+
+## 6. Удаление
+
+```js
+// в карточке:
+delBtn.addEventListener("click", (e) => {
+  e.stopPropagation();                          // не открыть детальную случайно
+  if (confirm(`Удалить «${data.title}»?`)) onDelete(data.id);
+});
+
+// в MainPage:
+Ajax.delete(Urls.product(id),
+  () => self.renderGrid(),                      // успех → перечитать список
+  (err) => alert('Не удалось удалить')
+);
+// → DELETE /products/5
+// → preflight OPTIONS — CORS middleware отвечает 204
+// → основной DELETE → сервер пишет урезанный JSON, возвращает 204
+// → onSuccess → renderGrid() с актуальным состоянием
+// → F5: удалённая карточка не возвращается (данные стёрты с диска)
+```
+
+## 7. CORS
+
+```js
+// example-express/src/index.js
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin',  '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+// → Фронт на :5500 (Live Server), бэк на :3000 — разные origin
+// → Same-Origin Policy блокирует cross-origin запросы по умолчанию
+// → Заголовки разрешают, OPTIONS обрабатывается для preflight (PATCH/DELETE)
+// → Вместо костыля "CORS Unblock extension" — решение на сервере
+```
+
+## 8. Доп задание: 3 режима PATCH
+
+На детальной странице рядом с ценой кнопка «Изменить» → input + 3 кнопки:
+
+```js
+// modules/priceScheduler.js
+saveImmediate(id, price, onOk, onErr);
+// → PATCH улетает сразу
+// → в Network видно сразу после клика
+
+saveWithTimeout(id, price, onOk, onErr);
+// → setTimeout(15000) → потом PATCH
+// → в Network появляется через 15 секунд
+// → ticket сохраняется в pendingDelayed для режима 3
+
+saveAfterDelayed(id, price, onOk, onErr);
+// → если pendingDelayed.done === false → ждёт в очереди listeners
+// → когда PATCH из режима 1 завершится — fireListeners() запускает PATCH
+// → если активного отложенного нет — улетает сразу
+```
+
+Демо в DevTools → Network:
+```
+T+0с    │ PATCH /products/3   ← режим 2 (моментально)
+T+15с   │ PATCH /products/3   ← режим 1 (был с таймаутом)
+T+15.1с │ PATCH /products/3   ← режим 3 (ждал режима 1)
+```
+
+JS-поток не блокируется ожиданием → асинхронность видна как разнесённые во времени запросы.
+
+Файлы: [`modules/priceScheduler.js`](modules/priceScheduler.js), [`pages/product/index.js`](pages/product/index.js)
+
+## 9. Структура проекта
 
 ```
 psp/
-├── index.html                       — каркас SPA (один <div id="root">)
+├── index.html                       — SPA-каркас, один <div id="root">
 ├── main.js                          — точка входа, создаёт MainPage
 ├── modules/
-│   ├── ajax.js                      — класс Ajax (обёртка над XHR)
-│   └── stockUrls.js                 — все URL'ы API в одном месте
+│   ├── ajax.js                      — XHR + колбэки
+│   ├── stockUrls.js                 — URL-константы
+│   └── priceScheduler.js            — 3 режима PATCH (доп)
 ├── pages/
-│   ├── main/index.js                — главная: сетка карточек, поиск
-│   └── product/index.js             — детальная: одна карточка
+│   ├── main/index.js                — сетка карточек + поиск + удаление
+│   └── product/index.js             — детальная + форма редактирования цены
 ├── components/
-│   ├── product-card/index.js        — карточка-плитка с кнопкой удаления
-│   └── back-button/index.js         — кнопка «назад»
+│   ├── product-card/index.js        — плитка с кнопкой ✕ и CSS-фолбэком img
+│   └── back-button/index.js
 └── example-express/
+    ├── package.json                 — express, nodemon
     └── src/
-        ├── index.js                 — запуск сервера, CORS, регистрация роутов
-        ├── routes/products.js       — карта URL → контроллер
-        ├── controllers/             — обработчики эндпоинтов
-        ├── services/                — бизнес-логика и работа с файлом
-        └── data/products.json       — «база данных»
+        ├── index.js                 — запуск, CORS, статика, роутер /products
+        ├── routes/products.js       — REST: GET/POST/PATCH/DELETE
+        ├── controllers/             — req/res ↔ сервис
+        ├── services/                — бизнес-логика + чтение/запись файла
+        └── data/products.json       — "база"
 ```
 
----
+## 10. Задание
 
-## Выполнение
-
-### 1. Настройка инфраструктуры
-
-Создана папка `modules/` с двумя ключевыми файлами:
-
-**`modules/stockUrls.js`** — централизованный реестр URL'ов API.
-Базовый URL вынесен в константу: если бэкенд переедет, правится одно место.
-
-```js
-const BASE_URL = 'http://localhost:3000';
-export const Urls = {
-    products:        ()       => `${BASE_URL}/products`,
-    productsByTitle: (title)  => `${BASE_URL}/products?title=${encodeURIComponent(title)}`,
-    product:         (id)     => `${BASE_URL}/products/${id}`,
-};
-```
-
-`encodeURIComponent` нужен для корректной передачи кириллицы в URL
-(символ «с» → `%D1%81` и т. д.).
-
-**`modules/ajax.js`** — класс `Ajax` со статическими методами
-`get / post / patch / delete`. Каждый метод принимает URL и две функции-колбэка
-(`onSuccess`, `onError`), внутри создаёт `XMLHttpRequest`, регистрирует
-обработчики `onload` и `onerror`, отправляет запрос. JSON-тело сериализуется
-через `JSON.stringify`, ответ парсится через `JSON.parse`.
-
-Статус-коды 2xx считаются успехом — вызывается `onSuccess({status, data})`.
-Иные статусы и сетевые сбои уходят в `onError`. Пустое тело ответа
-(например, после DELETE → 204 No Content) обрабатывается отдельно,
-чтобы не пытаться парсить пустую строку.
-
-### 2. Главная страница (`pages/main/index.js`)
-
-При запуске:
-1. Рисует шапку с логотипом-бэйджем «МГТУ» и заголовок «Буфет».
-2. Рисует поле поиска и счётчик найденного.
-3. Запускает `renderGrid()` — загрузку и отрисовку карточек.
-
-`renderGrid()` собирает URL (`Urls.products()` или `Urls.productsByTitle(...)`
-если есть фильтр), вызывает `Ajax.get(url, success, error)`. В success-колбэке
-данные передаются в `_renderProducts(data)`, который создаёт `ProductCardComponent`
-для каждой карточки. В error-колбэке показывается блок «Сервер недоступен».
-
-### 3. Детальная страница (`pages/product/index.js`)
-
-При клике по карточке создаётся `new ProductPage(parent, id)` и вызывается
-`render()`. Метод рисует кнопку «назад» и плейсхолдер «Загрузка...»,
-после чего шлёт `Ajax.get(Urls.product(id), ...)`. Когда ответ приходит —
-`_renderProduct(root, item)` отрисовывает фото, БЖУ, цену. Если запрос упал —
-`_renderError(root)` показывает блок «Карточка не найдена».
-
-### 4. Бэкенд (`example-express/`)
-
-Реализована слоёная архитектура:
-
-- **`src/index.js`** — запуск Express, регистрация CORS-middleware,
-  парсера JSON, статики и роутера `/products`. Вызывает
-  `productsService.init(...)` для передачи пути к JSON-файлу.
-
-- **`src/routes/products.js`** — REST-маршруты:
-
-  ```
-  GET    /products       — список всех (опционально ?title=)
-  GET    /products/:id   — одна карточка
-  POST   /products       — создать
-  PATCH  /products/:id   — обновить
-  DELETE /products/:id   — удалить
-  ```
-
-- **`src/controllers/productsController.js`** — тонкий слой между HTTP
-  и бизнес-логикой. Достаёт параметры из `req`, вызывает сервис,
-  формирует ответ. Возвращает 404, если карточка не найдена.
-
-- **`src/services/productsService.js`** — операции `findAll / findOne /
-  create / update / remove`. Не знает про HTTP — работает только с данными.
-
-- **`src/services/fileService.js`** — чтение и запись JSON-файла через
-  встроенный модуль `fs` Node.js.
-
-- **`src/data/products.json`** — массив карточек со схемой
-  `{id, title, price, src, cal, p, f, c, exp}`.
-
----
-
-## Вариант 1: фильтрация и удаление
-
-### Фильтрация (на сервере)
-
-Поле поиска вверху главной страницы. На каждый `input` срабатывает
-**debounce 300 мс** — таймер сбрасывается на каждую новую букву и стреляет
-только когда пользователь сделал паузу. Это снимает нагрузку с сервера:
-вместо 7 запросов на «Сникерс» уходит один.
-
-Запрос идёт с query-параметром: `GET /products?title=сни`. **Фильтрация
-выполняется на сервере** (в `productsService.findAll`):
-
-```js
-products.filter(p => p.title.toLowerCase().includes(title.toLowerCase()))
-```
-
-Это правильный паттерн: если бы карточек был миллион, нельзя гонять весь
-объём на клиент и фильтровать локально.
-
-### Удаление (DELETE-запрос)
-
-На каждой карточке — кнопка ✕ в правом верхнем углу. По клику показывается
-`confirm`. При подтверждении вызывается `MainPage.deleteProduct(id)`,
-который шлёт `Ajax.delete(Urls.product(id), success, error)`.
-
-Важный момент: на кнопке ✕ стоит `e.stopPropagation()` — клик по ней
-не должен «всплыть» к клику по карточке, иначе сработали бы оба
-обработчика (и удалили, и открыли детальную).
-
-Сервер возвращает **204 No Content**: операция успешна, тела ответа нет.
-В success-колбэке вызывается `renderGrid()` — перечитываем список с сервера.
-После F5 удалённая карточка не возвращается — данные действительно стёрты
-из `products.json`.
-
----
-
-## Решение проблемы CORS
-
-Фронт открывается через Live Server (`http://127.0.0.1:5500`), бэк — на
-`http://localhost:3000`. Это разные **origin** (порт отличается), и браузер
-по умолчанию блокирует cross-origin запросы из-за **Same-Origin Policy**.
-
-Методичка предлагает костыль — расширение CORS Unblock, которое подменяет
-заголовки в браузере. В реальных проектах так не делают (у пользователей
-такого расширения нет), поэтому решение реализовано **на сервере** через
-middleware:
-
-```js
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin',  '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    if (req.method === 'OPTIONS') return res.sendStatus(204);
-    next();
-});
-```
-
-Для «опасных» методов (PATCH, DELETE) браузер перед основным запросом шлёт
-**preflight OPTIONS** — спрашивает разрешения. Сервер отвечает 204 со
-списком разрешённых методов, после чего идёт основной запрос.
-
----
-
-## Как запустить
-
-```bash
-# 1. Установить зависимости бэкенда (один раз)
-cd example-express
-npm install
-
-# 2. Запустить сервер
-npm start                       # → http://localhost:3000
-
-# 3. Открыть index.html в VS Code через Live Server
-#    (или любой статический сервер: npx serve .)
-```
-
-Проверить API через curl:
-
-```bash
-curl http://localhost:3000/products              # список всех
-curl http://localhost:3000/products/1            # одна по id
-curl -X DELETE http://localhost:3000/products/1  # удаление
-```
-
----
-
-## Выводы
-
-В ходе работы получены навыки:
-
-1. Создания клиент-серверного приложения с разделением на два процесса.
-2. Реализации HTTP-запросов из браузера через `XMLHttpRequest` с колбэками.
-3. Построения REST API на Express со слоёной архитектурой
-   (routes → controllers → services).
-4. Решения проблемы CORS на стороне сервера через middleware с
-   соответствующими заголовками и обработкой preflight-запросов OPTIONS.
-5. Серверной фильтрации данных через query-параметры — паттерн всех
-   реальных API.
-6. Корректной обработки специфичных HTTP-статусов (204 No Content)
-   и сетевых ошибок.
-
-Приложение полностью выполняет поставленные задачи: данные хранятся на
-сервере, переживают перезагрузку, поиск работает на бэке, удаление
-персистентно.
+- [x] Класс Ajax с методами get/post/patch/delete (на колбэках, без Promise)
+- [x] URL-константы (Urls.products, Urls.product(id), Urls.productsByTitle)
+- [x] Загрузка списка через GET /products
+- [x] Загрузка одной карточки через GET /products/:id
+- [x] Фильтрация по названию (GET /products?title=) с debounce
+- [x] Удаление карточки (DELETE /products/:id) с подтверждением
+- [x] CORS решён на сервере через middleware + обработка preflight
+- [x] Доп: 3 режима PATCH (моментально, через 15с, после первого) для демо асинхронности
