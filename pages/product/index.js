@@ -83,7 +83,7 @@ export class ProductPage {
                         <div class="d-flex align-items-center justify-content-between mt-4">
                             <h3 class="fw-bold m-0" id="price-display" style="color: #004077;">${item.price}</h3>
                             <button class="btn btn-sm btn-outline-primary" id="edit-price-btn">
-                                <i class="bi bi-pencil"></i> Изменить
+                                Изменить
                             </button>
                         </div>
 
@@ -93,13 +93,13 @@ export class ProductPage {
 
                             <div class="d-grid gap-2">
                                 <button class="btn btn-warning" id="save-timeout">
-                                    <i class="bi bi-clock"></i> Сохранить через 15 секунд (режим 1)
+                                    Сохранить через 15 секунд (режим 1)
                                 </button>
                                 <button class="btn btn-success" id="save-immediate">
-                                    <i class="bi bi-lightning"></i> Сохранить сразу (режим 2)
+                                    Сохранить сразу (режим 2)
                                 </button>
                                 <button class="btn btn-info" id="save-after">
-                                    <i class="bi bi-link-45deg"></i> Сохранить после режима 1 (режим 3)
+                                    Сохранить после режима 1 (режим 3)
                                 </button>
                                 <button class="btn btn-link" id="cancel-edit">Отмена</button>
                             </div>
