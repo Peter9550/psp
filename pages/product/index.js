@@ -47,14 +47,19 @@ export class ProductPage {
             return;
         }
 
-        const safeTitle = encodeURIComponent(item.title || 'Товар');
-        const fallback = `https://placehold.co/600x600/004077/FFFFFF/png?text=${safeTitle}`;
+        const escapeHtml = (s) => String(s || '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const titleHtml = escapeHtml(item.title);
 
         root.insertAdjacentHTML('beforeend', `
             <div class="row g-5 mt-2">
                 <div class="col-md-6">
-                    <img src="${item.src}" alt="${item.title}" class="product-detail-img"
-                         onerror="this.onerror=null;this.src='${fallback}';">
+                    <div class="detail-img-box">
+                        <img src="${escapeHtml(item.src)}" alt="${titleHtml}" class="product-detail-img"
+                             onerror="this.classList.add('img-failed');this.parentNode.classList.add('img-fallback-active');">
+                        <div class="img-fallback-text">${titleHtml}</div>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <h1 class="fw-bold mb-4" style="color: #004077;">${item.title}</h1>

@@ -1,9 +1,16 @@
+function escapeHtml(s) {
+    return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 export class ProductCardComponent {
     constructor(parent) { this.parent = parent; }
 
     render(data, onClick, onDelete) {
-        const safeTitle = encodeURIComponent(data.title || 'Товар');
-        const fallback = `https://placehold.co/600x400/004077/FFFFFF/png?text=${safeTitle}`;
+        const titleHtml = escapeHtml(data.title);
 
         this.parent.insertAdjacentHTML('beforeend', `
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
@@ -11,14 +18,15 @@ export class ProductCardComponent {
                     <button class="delete-btn" id="delete-${data.id}" title="Удалить">
                         <i class="bi bi-x-lg"></i>
                     </button>
-                    <div class="img-box">
-                        <img src="${data.src}" alt="${data.title}"
-                             onerror="this.onerror=null;this.src='${fallback}';">
+                    <div class="img-box" id="imgbox-${data.id}">
+                        <img src="${escapeHtml(data.src)}" alt="${titleHtml}"
+                             onerror="this.classList.add('img-failed');this.parentNode.classList.add('img-fallback-active');">
+                        <div class="img-fallback-text">${titleHtml}</div>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">${data.title}</h5>
+                        <h5 class="card-title">${titleHtml}</h5>
                         <div class="d-flex justify-content-between align-items-center mt-auto">
-                            <span class="price">${data.price}</span>
+                            <span class="price">${escapeHtml(data.price)}</span>
                             <i class="bi bi-plus-circle-fill plus-icon"></i>
                         </div>
                     </div>
