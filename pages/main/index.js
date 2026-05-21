@@ -10,7 +10,7 @@ export class MainPage {
         this._debounce = null;
     }
 
-    async renderGrid() {
+    renderGrid() {
         const grid = document.getElementById('products-grid');
         const counter = document.getElementById('products-counter');
         if (!grid) return;
@@ -23,20 +23,31 @@ export class MainPage {
         if (counter) counter.textContent = '';
 
         const url = this.filter ? Urls.productsByTitle(this.filter) : Urls.products();
-        let products;
-        try {
-            const { data } = await Ajax.get(url);
-            products = Array.isArray(data) ? data : [];
-        } catch (e) {
-            console.error('Не удалось загрузить карточки', e);
-            grid.innerHTML = `
-                <div class="col-12 state-block error">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <div>Сервер недоступен.</div>
-                    <small class="text-muted">Проверь, что бэкенд запущен на <code>http://localhost:3000</code></small>
-                </div>`;
-            return;
-        }
+        const self = this;
+
+        Ajax.get(
+            url,
+            function (response) {
+                self._renderProducts(response.data);
+            },
+            function (err) {
+                console.error('Не удалось загрузить карточки', err);
+                grid.innerHTML = `
+                    <div class="col-12 state-block error">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <div>Сервер недоступен.</div>
+                        <small class="text-muted">Проверь, что бэкенд запущен на <code>http://localhost:3000</code></small>
+                    </div>`;
+            }
+        );
+    }
+
+    _renderProducts(data) {
+        const grid = document.getElementById('products-grid');
+        const counter = document.getElementById('products-counter');
+        if (!grid) return;
+
+        const products = Array.isArray(data) ? data : [];
 
         if (counter) {
             counter.textContent = this.filter
@@ -54,26 +65,31 @@ export class MainPage {
             return;
         }
 
-        products.forEach(item => {
+        const self = this;
+        products.forEach(function (item) {
             new ProductCardComponent(grid).render(
                 item,
-                (id) => new ProductPage(this.parent, id).render(),
-                (id) => this.deleteProduct(id)
+                function (id) { new ProductPage(self.parent, id).render(); },
+                function (id) { self.deleteProduct(id); }
             );
         });
     }
 
-    async deleteProduct(id) {
-        try {
-            await Ajax.delete(Urls.product(id));
-            await this.renderGrid();
-        } catch (e) {
-            console.error(e);
-            alert('Не удалось удалить карточку: ' + (e.statusText || 'сетевая ошибка'));
-        }
+    deleteProduct(id) {
+        const self = this;
+        Ajax.delete(
+            Urls.product(id),
+            function () {
+                self.renderGrid();
+            },
+            function (err) {
+                console.error(err);
+                alert('Не удалось удалить карточку: ' + (err.statusText || 'сетевая ошибка'));
+            }
+        );
     }
 
-    async render() {
+    render() {
         this.parent.innerHTML = `
             <div class="container py-5">
                 <div class="row align-items-center mb-4 g-4">
@@ -99,12 +115,13 @@ export class MainPage {
         `;
 
         const input = document.getElementById('filter-input');
-        input.addEventListener('input', (e) => {
-            this.filter = e.target.value.trim();
-            clearTimeout(this._debounce);
-            this._debounce = setTimeout(() => this.renderGrid(), 300);
+        const self = this;
+        input.addEventListener('input', function (e) {
+            self.filter = e.target.value.trim();
+            clearTimeout(self._debounce);
+            self._debounce = setTimeout(function () { self.renderGrid(); }, 300);
         });
 
-        await this.renderGrid();
+        this.renderGrid();
     }
 }

@@ -9,21 +9,14 @@ export class ProductPage {
         this.id = id;
     }
 
-    async loadProduct() {
-        try {
-            const { data } = await Ajax.get(Urls.product(this.id));
-            return data;
-        } catch (e) {
-            console.error('Не удалось загрузить карточку', e);
-            return null;
-        }
-    }
-
-    async render() {
+    render() {
         this.parent.innerHTML = `<div class="container py-5" id="product-container"></div>`;
         const root = document.getElementById('product-container');
+        const self = this;
 
-        new BackButtonComponent(root).render(() => new MainPage(this.parent).render());
+        new BackButtonComponent(root).render(function () {
+            new MainPage(self.parent).render();
+        });
 
         root.insertAdjacentHTML('beforeend', `
             <div class="state-block" id="product-loading">
@@ -32,16 +25,24 @@ export class ProductPage {
             </div>
         `);
 
-        const item = await this.loadProduct();
-        document.getElementById('product-loading')?.remove();
+        Ajax.get(
+            Urls.product(this.id),
+            function (response) {
+                self._renderProduct(root, response.data);
+            },
+            function (err) {
+                console.error('Не удалось загрузить карточку', err);
+                self._renderError(root);
+            }
+        );
+    }
+
+    _renderProduct(root, item) {
+        const loading = document.getElementById('product-loading');
+        if (loading) loading.remove();
 
         if (!item) {
-            root.insertAdjacentHTML('beforeend', `
-                <div class="state-block error mt-3">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <div>Карточка не найдена или сервер недоступен.</div>
-                </div>
-            `);
+            this._renderError(root);
             return;
         }
 
@@ -75,6 +76,18 @@ export class ProductPage {
                         <h3 class="mt-4 fw-bold" style="color: #004077;">${item.price}</h3>
                     </div>
                 </div>
+            </div>
+        `);
+    }
+
+    _renderError(root) {
+        const loading = document.getElementById('product-loading');
+        if (loading) loading.remove();
+
+        root.insertAdjacentHTML('beforeend', `
+            <div class="state-block error mt-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div>Карточка не найдена или сервер недоступен.</div>
             </div>
         `);
     }
