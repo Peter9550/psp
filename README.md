@@ -1,42 +1,114 @@
-# ЛР 6. Fetch API + Vite
+# ЛР 6. Promise, fetch, сборка клиентской части через Vite
 
-**Студент:** Емельянов Пётр, ИУ5-42Б
-**Цель:** Заменить XHR на fetch + async/await и собрать фронт через Vite, чтобы бэкенд раздавал его как статику.
+**Тема проекта**
+**Буфет МГТУ им. Н. Э. Баумана** — то же приложение каталога продуктов буфета, что и в ЛР5, но переведённое на современный стек: `XMLHttpRequest` заменён на `fetch` с `async/await`, а фронтенд собирается сборщиком Vite и раздаётся бэкендом как статика.
 
-## План
-1. Класс `Ajax` на fetch (вместо XHR)
-2. async/await + try/catch в страницах
-3. Vite: конфиг и скрипты
-4. Сборка → `./public/` → раздача бэкендом
+---
 
-## 1. Запуск
+## Оглавление
 
-```bash
-# === dev (с hot-reload) ===
-cd example-express && npm install && npm start   # → :3000 (API)
-cd .. && npm install && npm run dev              # → :5173 (Vite dev-server)
+1. [Введение и назначение](#1-введение-и-назначение)
+2. [Общая структура проекта](#2-общая-структура-проекта)
+3. [Описание разделов](#3-описание-разделов)
+4. [Promise и async/await — что это](#4-promise-и-asyncawait--что-это)
+5. [Класс Ajax на fetch](#5-класс-ajax-на-fetch)
+6. [async/await в страницах](#6-asyncawait-в-страницах)
+7. [Сборка через Vite](#7-сборка-через-vite)
+8. [Раздача статики бэкендом](#8-раздача-статики-бэкендом)
+9. [Отличия от ЛР5](#9-отличия-от-лр5)
+10. [Запуск](#10-запуск)
+11. [Об авторе](#11-об-авторе)
 
-# === production (всё на :3000, без CORS) ===
-npm run build                                    # → ./public/
-rm -rf example-express/public
-cp -r public example-express/public
-cd example-express && npm start                  # → http://localhost:3000/
+---
+
+## 1. Введение и назначение
+
+Лабораторная работа состоит из **двух частей**:
+
+* **Часть 1** — заменить устаревший `XMLHttpRequest` (на колбэках) современным `fetch` API на промисах и `async/await`. Изменение должно затронуть только низкоуровневый модуль работы с сетью.
+* **Часть 2** — собрать клиентскую часть через систему сборки **Vite** и настроить бэкенд на раздачу собранного фронтенда как статики, чтобы фронт и API работали с одного origin и проблема CORS была решена архитектурно.
+
+Лабораторная надстраивается над ЛР5 — ветка `fetch` создана от ветки `ajax`. Функционал приложения (поиск, удаление, просмотр карточек, изменение цены) полностью идентичен предыдущей лабораторной — это работа над **инженерным качеством**, а не над фичами.
+
+---
+
+## 2. Общая структура проекта
+
+```
+psp/
+├── index.html                       — каркас SPA: один <div id="root">
+├── main.js                          — точка входа, создаёт MainPage
+├── vite.config.js                   — конфигурация сборщика
+├── package.json                     — скрипты dev/build/preview, devDep vite
+├── modules/
+│   ├── ajax.js                      — класс Ajax (fetch + async/await)
+│   └── stockUrls.js                 — URL-константы API
+├── pages/
+│   ├── main/index.js                — главная: сетка карточек + поиск
+│   └── product/index.js             — детальная: одна карточка
+├── components/
+│   ├── product-card/index.js        — карточка-плитка
+│   └── back-button/index.js         — кнопка «назад»
+├── public/                          — результат `npm run build` (gitignored)
+└── example-express/                 — бэкенд (Node.js + Express)
+    ├── package.json
+    ├── public/                      — копия билда фронта (gitignored)
+    └── src/
+        ├── index.js                 — запуск, CORS, express.static, роутер
+        ├── routes/products.js       — REST: GET/POST/PATCH/DELETE
+        ├── controllers/             — обработчики
+        ├── services/                — бизнес-логика
+        └── data/products.json       — «база данных»
 ```
 
-## 2. fetch вместо XHR
+---
+
+## 3. Описание разделов
+
+В ЛР6 заменены/добавлены следующие компоненты:
+
+* **`modules/ajax.js`** — полностью переписан с XHR на `fetch` + `async/await` + `try/catch`. Внешний API класса (`Ajax.get/post/patch/delete`) сохранён, поэтому страницы переписывать не пришлось.
+* **`pages/main/index.js`, `pages/product/index.js`** — теперь используют `await` вместо колбэков.
+* **`vite.config.js` (новый)** — конфигурация сборщика Vite с `outDir: './public'`.
+* **`package.json`** — добавлены скрипты `dev`/`build`/`preview` и `vite` в `devDependencies`.
+* **`example-express/src/index.js`** — добавлен `express.static(path.join(__dirname, '..', 'public'))` для раздачи собранного фронта как статики.
+
+---
+
+## 4. Promise и async/await — что это
+
+`Promise` — объект, представляющий результат **будущей** асинхронной операции. У него три состояния:
+
+* `pending` — операция выполняется, результат неизвестен;
+* `fulfilled` — успех (вызвали `resolve(value)`);
+* `rejected` — ошибка (вызвали `reject(error)`).
+
+`async/await` — синтаксический сахар над промисами. Функция, помеченная `async`, автоматически возвращает промис. Внутри неё можно ставить `await` перед другим промисом — выполнение «приостанавливается» до завершения, и возвращается значение из `fulfilled` (или бросается исключение из `rejected`, которое ловится `try/catch`).
 
 ```js
-// Было (ЛР5, XHR + колбэки):
-Ajax.get(url, (response) => render(response.data), console.error);
+// Старый стиль — цепочка .then().catch()
+fetch(url)
+  .then(r => r.json())
+  .then(data => console.log(data))
+  .catch(err => console.log(err));
 
-// Стало (ЛР6, fetch + await):
-const { data } = await Ajax.get(url);
-render(data);
-// → нет вложенных колбэков
-// → ошибки через try/catch, не через onError-параметр
+// Современный стиль — async/await
+async function load() {
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+// → код читается сверху вниз как синхронный
+// → ошибки ловятся обычным try/catch
 ```
 
-## 3. Класс Ajax
+---
+
+## 5. Класс Ajax на fetch
 
 ```js
 // modules/ajax.js
@@ -46,10 +118,18 @@ static async request({ method, url, body }) {
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!response.ok) throw { status: response.status, statusText: response.statusText };
-  // → fetch не считает 4xx/5xx за провал — проверяем response.ok сами
+
+  if (!response.ok) {
+    throw { status: response.status, statusText: response.statusText };
+  }
+  // → fetch НЕ считает HTTP-ошибки 4xx/5xx за провал
+  // → промис уходит в rejected только при сетевом сбое
+  // → response.ok = true для 200–299, проверяю и бросаю сам
+
   const data = response.status === 204 ? null : await response.json();
-  // → DELETE → 204 No Content, тела нет, response.json() упадёт на пустой строке
+  // → DELETE возвращает 204 No Content, тела нет
+  // → response.json() упадёт на пустой строке — поэтому проверка
+
   return { status: response.status, data };
 }
 
@@ -59,40 +139,40 @@ static async patch(url, body) { return Ajax.request({ method: 'PATCH',  url, bod
 static async delete(url)      { return Ajax.request({ method: 'DELETE', url }); }
 ```
 
-Внешний API класса не изменился — страницы переписывать не пришлось. Сменили низкоуровневую технологию в одном файле, остальное продолжает работать.
+Главная мысль: **сменили низкоуровневую технологию (XHR → fetch) в одном файле**, остальной код не пострадал, потому что внешний интерфейс класса (`Ajax.get/post/patch/delete`) идентичен. Это сила модульной архитектуры.
 
-Файл: [`modules/ajax.js`](modules/ajax.js)
+---
 
-## 4. async/await в страницах
+## 6. async/await в страницах
 
 ```js
 // pages/main/index.js
 async renderGrid() {
   try {
-    const { data } = await Ajax.get(url);
+    const { data } = await Ajax.get(url);                  // → ждём промис
     const products = Array.isArray(data) ? data : [];
     products.forEach(item => new ProductCardComponent(grid).render(item, ...));
   } catch (e) {
-    grid.innerHTML = '<div>Сервер недоступен</div>';
+    grid.innerHTML = '<div>Сервер недоступен</div>';       // → ловим и сетевой сбой,
+                                                            //   и наш throw из !response.ok
   }
 }
-// → async помечает функцию → она автоматически возвращает Promise
-// → await "ждёт" промис → возвращает значение из fulfilled / бросает из rejected
-// → try/catch ловит и сетевые сбои, и наш throw из !response.ok
 ```
 
-## 5. Vite
+Сравните с ЛР5, где приходилось разносить логику на две функции (onSuccess / onError) и тащить контекст через `const self = this`. Теперь линейный код.
+
+---
+
+## 7. Сборка через Vite
 
 ```js
 // vite.config.js
 export default {
   build: {
-    outDir: './public',
-    emptyOutDir: true,
+    outDir: './public',     // → методичка просит ./public (по умолчанию ./dist)
+    emptyOutDir: true,      // → очищать перед каждой сборкой
   },
 };
-// → outDir переопределён с ./dist на ./public (под методичку)
-// → emptyOutDir очищает папку перед каждой сборкой
 ```
 
 ```json
@@ -114,54 +194,81 @@ export default {
 После `npm run build`:
 ```
 public/
-├── index.html                      ← переписанный, со ссылкой на бандл
+├── index.html                      ← переписан, ссылается на хешированный бандл
 └── assets/
     └── index-Cj04efL0.js           ← весь JS склеен и минифицирован
 ```
 
-## 6. Раздача статики бэкендом
+Хеш в имени файла (`Cj04efL0`) — это для кеширования. При изменении кода хеш меняется → браузер видит новое имя → перекачивает. Старый кеш не путается с новым.
+
+---
+
+## 8. Раздача статики бэкендом
 
 ```js
 // example-express/src/index.js
 app.use(express.static(path.join(__dirname, '..', 'public')));
-// → GET /                       → public/index.html
-// → GET /assets/index-XXX.js    → public/assets/index-XXX.js
-// → GET /products               → не файл, идёт в API-роут
-// → path.join(__dirname, '..', 'public') — устойчивый абсолютный путь
-//   (методичка показывает useStaticAssets для NestJS, для Express — то же самое)
+// → GET /                        → public/index.html
+// → GET /assets/index-XXX.js     → public/assets/index-XXX.js
+// → GET /products                → не файл, идёт в API-роут
 ```
+
+`path.join(__dirname, '..', 'public')` — устойчивый абсолютный путь, не зависит от того, из какой директории запущен `node`. Методичка показывает аналог для NestJS: `useStaticAssets(resolve(__dirname, '..', 'public'))` — для Express это `express.static(...)`, то же самое.
 
 После сборки и копирования `public/` в бэкенд:
 ```
-http://localhost:3000/           ← фронт (бандл от Vite)
-http://localhost:3000/products   ← API
-                                 → один origin, CORS не нужен
-                                 → DevTools Network: PATCH без preflight OPTIONS
+http://localhost:3000/             ← фронт (бандл от Vite)
+http://localhost:3000/products     ← API
+                                   → один origin → CORS не нужен в prod
+                                   → DevTools Network: PATCH/DELETE без preflight OPTIONS
 ```
 
-## 7. Отличия от ЛР5
+---
+
+## 9. Отличия от ЛР5
 
 | | ЛР5 | ЛР6 |
 |---|---|---|
-| HTTP | XMLHttpRequest | fetch |
+| HTTP-клиент | `XMLHttpRequest` | `fetch` |
 | Стиль | колбэки `onload/onerror` | `async/await` |
-| Ошибки | вторая функция-колбэк | `try/catch` |
+| Обработка ошибок | вторая функция-колбэк | `try/catch` |
 | Доставка фронта | Live Server (отдельно :5500) | Vite билд → `express.static` |
 | URL пользователя | `127.0.0.1:5500/index.html` | `localhost:3000/` |
 | `<script src>` | твой `main.js` | минифицированный `assets/index-XXX.js` |
 | CORS | обязателен на сервере | не нужен в prod (один origin) |
 
-UI визуально идентичен ЛР5 — лаба про инженерию, не про функционал.
+UI визуально идентичен ЛР5 — лаба про **инженерное качество**, а не про функционал.
 
-## 8. Задание
+---
 
-- [x] Модуль `ajax.js` переписан на `fetch` + `async/await` + `try/catch`
-- [x] Проверка `response.ok` (fetch не бросает на 4xx/5xx)
-- [x] Обработка 204 No Content (DELETE)
-- [x] Внешний API класса сохранён — страницы не правились
-- [x] `pages/main` и `pages/product` используют `async/await`
-- [x] Vite добавлен в `devDependencies`
-- [x] `vite.config.js` с `outDir: './public'`, `emptyOutDir: true`
-- [x] Скрипты `dev`/`build`/`preview` в `package.json`
-- [x] `express.static(path.join(__dirname, '..', 'public'))` в бэкенде
-- [x] В prod-режиме CORS не задействован (один origin)
+## 10. Запуск
+
+**Dev-режим** (с hot-reload, два процесса):
+```bash
+# терминал 1 — бэкенд
+cd example-express
+npm install                       # один раз
+npm start                         # → :3000 (только API)
+
+# терминал 2 — Vite dev-server
+cd ..
+npm install                       # один раз
+npm run dev                       # → http://localhost:5173/
+```
+
+**Production-режим** (всё на одном порту, без CORS):
+```bash
+npm run build                                    # → ./public/
+rm -rf example-express/public
+cp -r public example-express/public
+cd example-express && npm start                  # → http://localhost:3000/
+```
+
+---
+
+## 11. Об авторе
+
+Разработка выполнена в рамках курса **«Принципы построения программных систем»**.
+**Студент:** Емельянов Пётр
+**Группа:** ИУ5-42Б
+**Учебное заведение:** МГТУ им. Н. Э. Баумана
